@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>O Metrô do Coração</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            overflow-x: hidden;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(255, 0, 127, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(0, 255, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(57, 255, 20, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .main-container {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+        }
+        
+        .title-container {
+            text-align: center;
+            animation: fadeInDown 1s ease-out;
+        }
+        
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .game-title {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 900;
+            margin-bottom: 0.5rem;
+            filter: drop-shadow(0 0 30px rgba(255, 255, 255, 0.5));
+        }
+        
+        .game-subtitle {
+            font-size: clamp(1rem, 2vw, 1.5rem);
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 300;
+        }
+        
+        #game-container {
+            position: relative;
+            width: 100%;
+            max-width: 900px;
+            aspect-ratio: 16/10;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            border-radius: 2rem;
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.3),
+                0 0 100px rgba(102, 126, 234, 0.2),
+                inset 0 0 60px rgba(255, 255, 255, 0.05);
+            overflow: hidden;
+            animation: fadeInUp 1s ease-out 0.3s both;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        #game-board {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(ellipse at center, rgba(255, 255, 255, 0.1) 0%, transparent 70%),
+                linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        }
+        
+        #game-board::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
+            pointer-events: none;
+        }
+        
+        .station {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 3px solid white;
+            transform: translate(-50%, -50%);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 15;
+            cursor: pointer;
+            box-shadow: 
+                0 0 20px currentColor,
+                0 0 40px currentColor,
+                inset 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+        
+        .station:hover {
+            transform: translate(-50%, -50%) scale(1.2);
+            box-shadow: 
+                0 0 30px currentColor,
+                0 0 60px currentColor,
+                inset 0 0 15px rgba(255, 255, 255, 0.7);
+        }
+        
+        .station-label {
+            position: absolute;
+            white-space: nowrap;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: white;
+            text-shadow: 
+                0 0 10px rgba(0, 0, 0, 0.8),
+                0 2px 4px rgba(0, 0, 0, 0.5);
+            left: 50%;
+            pointer-events: none;
+            opacity: 0.9;
+            transition: opacity 0.3s ease;
+        }
+        
+        .station:hover .station-label {
+            opacity: 1;
+        }
+        
+        .train {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 20;
+            transition: box-shadow 0.3s ease;
+            box-shadow: 
+                0 0 30px currentColor,
+                0 0 60px currentColor,
+                0 0 90px currentColor,
+                inset 0 0 15px rgba(255, 255, 255, 0.8);
+            animation: trainPulse 2s infinite;
+        }
+        
+        @keyframes trainPulse {
+            0%, 100% { 
+                box-shadow: 
+                    0 0 30px currentColor,
+                    0 0 60px currentColor,
+                    0 0 90px currentColor,
+                    inset 0 0 15px rgba(255, 255, 255, 0.8);
+            }
+            50% { 
+                box-shadow: 
+                    0 0 40px currentColor,
+                    0 0 80px currentColor,
+                    0 0 120px currentColor,
+                    inset 0 0 20px rgba(255, 255, 255, 1);
+            }
+        }
+        
+        .path {
+            position: absolute;
+            height: 3px;
+            z-index: 5;
+            opacity: 0.6;
+            transition: opacity 0.3s ease;
+            box-shadow: 0 0 10px currentColor;
+        }
+        
+        .path.active {
+            opacity: 1;
+            animation: pathGlow 1s infinite;
+        }
+        
+        @keyframes pathGlow {
+            0%, 100% { box-shadow: 0 0 10px currentColor; }
+            50% { box-shadow: 0 0 20px currentColor, 0 0 30px currentColor; }
+        }
+        
+        #message-box {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.95) 100%);
+            backdrop-filter: blur(20px);
+            padding: 2.5rem;
+            border-radius: 2rem;
+            box-shadow: 
+                0 25px 50px rgba(0, 0, 0, 0.3),
+                0 0 100px rgba(102, 126, 234, 0.1),
+                inset 0 0 30px rgba(255, 255, 255, 0.5);
+            z-index: 30;
+            width: 90%;
+            max-width: 600px;
+            display: none;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        #message-box.active {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+        
+        #message-title {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+        }
+        
+        #message-text {
+            line-height: 1.6;
+            color: #4a5568;
+        }
+        
+        #message-text strong {
+            color: #2d3748;
+            font-weight: 700;
+        }
+        
+        .option-button {
+            padding: 0.75rem 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+            border-radius: 2rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .option-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.5s, height 0.5s;
+        }
+        
+        .option-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .option-button:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+        
+        .option-button:active {
+            transform: translateY(0);
+        }
+        
+        .option-button.correct {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            animation: correctPulse 0.6s ease;
+        }
+        
+        .option-button.incorrect {
+            background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+            animation: shake 0.5s ease;
+        }
+        
+        @keyframes correctPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        
+        #stats {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem;
+            border-radius: 1.5rem;
+            box-shadow: 
+                0 10px 40px rgba(0, 0, 0, 0.1),
+                inset 0 0 20px rgba(255, 255, 255, 0.5);
+            animation: fadeInUp 1s ease-out 0.6s both;
+        }
+        
+        .stat-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border-radius: 1rem;
+            transition: transform 0.3s ease;
+        }
+        
+        .stat-item:hover {
+            transform: translateY(-2px);
+        }
+        
+        .stat-value {
+            font-weight: 700;
+            font-size: 1.25rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .text-neon-red {
+            color: #ff007f;
+            text-shadow: 
+                0 0 10px #ff007f,
+                0 0 20px #ff007f,
+                0 0 30px #ff007f,
+                0 0 40px #ff007f;
+            animation: neonFlicker 2s infinite alternate;
+        }
+        
+        .text-neon-blue {
+            color: #00ffff;
+            text-shadow: 
+                0 0 10px #00ffff,
+                0 0 20px #00ffff,
+                0 0 30px #00ffff,
+                0 0 40px #00ffff;
+            animation: neonFlicker 2s infinite alternate 0.3s;
+        }
+        
+        .text-neon-green {
+            color: #39ff14;
+            text-shadow: 
+                0 0 10px #39ff14,
+                0 0 20px #39ff14,
+                0 0 30px #39ff14,
+                0 0 40px #39ff14;
+            animation: neonFlicker 2s infinite alternate 0.6s;
+        }
+        
+        @keyframes neonFlicker {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+        
+        .pulse-animation {
+            animation: stationPulse 1s ease-out;
+        }
+        
+        @keyframes stationPulse {
+            0% { 
+                transform: translate(-50%, -50%) scale(1);
+                box-shadow: 0 0 0 0 currentColor;
+            }
+            50% { 
+                transform: translate(-50%, -50%) scale(1.3);
+                box-shadow: 0 0 0 20px transparent;
+            }
+            100% { 
+                transform: translate(-50%, -50%) scale(1);
+                box-shadow: 0 0 0 30px transparent;
+            }
+        }
+        
+        .heart-beat {
+            animation: heartBeat 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes heartBeat {
+            0%, 100% { transform: scale(1); }
+            14% { transform: scale(1.1); }
+            28% { transform: scale(1); }
+            42% { transform: scale(1.1); }
+            56% { transform: scale(1); }
+        }
+        
+        .achievement {
+            position: fixed;
+            top: 2rem;
+            right: -400px;
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            color: #2d3748;
+            padding: 1rem 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 40px rgba(255, 215, 0, 0.4);
+            font-weight: 700;
+            z-index: 100;
+            transition: right 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .achievement.show {
+            right: 2rem;
+        }
+        
+        .progress-bar {
+            position: absolute;
+            top: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+            z-index: 10;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 4px;
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+        }
+        
+        @media (max-width: 768px) {
+            .game-title {
+                font-size: 2.5rem;
+            }
+            
+            .station-label {
+                font-size: 0.65rem;
+            }
+            
+            #message-box {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="title-container">
+            <h1 class="game-title">
+                <span class="text-neon-red">O</span> 
+                <span class="text-neon-blue">Metrô</span> 
+                <span class="text-neon-green">do</span> 
+                <span class="text-neon-red heart-beat">Coração</span>
+            </h1>
+            <p class="game-subtitle">Uma aventura educativa pelo sistema circulatório</p>
+        </div>
+
+        <div id="game-container">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+            </div>
+            <div id="game-board"></div>
+            <!-- Chatbox para o Dr. Célula -->
+            <div id="chat-box" class="hidden absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-6 rounded-2xl bg-white shadow-xl z-50 w-11/12 max-w-lg">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-2xl font-bold text-gray-800">✨ Dr. Célula ✨</h3>
+                    <button id="close-chat" class="text-gray-500 hover:text-gray-700 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+                <div id="chat-history" class="h-64 overflow-y-auto mb-4 p-2 border border-gray-200 rounded-lg text-gray-700 text-left">
+                    <p class="text-sm text-gray-500 mb-2">Olá! Estou aqui para ajudar. Pode fazer qualquer pergunta sobre o sistema cardiovascular.</p>
+                </div>
+                <div class="flex">
+                    <input type="text" id="chat-input" class="flex-1 p-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Faça sua pergunta...">
+                    <button id="chat-send" class="p-2 bg-blue-500 text-white rounded-r-lg hover:bg-blue-600 transition-colors">
+                        Perguntar
+                    </button>
+                </div>
+            </div>
+
+            <div id="message-box">
+                <h2 id="message-title" class="text-3xl font-bold mb-4"></h2>
+                <p id="message-text" class="text-lg mb-6 text-center"></p>
+                <p id="message-question" class="text-lg font-semibold mb-4"></p>
+                <div id="options-container" class="flex flex-col gap-3 w-full"></div>
+            </div>
+        </div>
+
+        <div id="stats" class="w-full max-w-4xl grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="stat-item">
+                <span class="font-semibold">Fase:</span>
+                <span class="stat-value" id="stage">1</span>
+            </div>
+            <div class="stat-item">
+                <span class="font-semibold">Pontos:</span>
+                <span class="stat-value" id="score">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="font-semibold">Vidas:</span>
+                <span class="stat-value" id="lives">3</span>
+            </div>
+            <div class="stat-item cursor-pointer hover:bg-gray-100 transition-colors" id="chat-button">
+                <span class="font-semibold">✨ Dr. Célula</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="achievement" class="achievement">
+        <span id="achievement-text"></span>
+    </div>
+
+    <audio id="correctSound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBjiJ2/LLciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+" type="audio/wav">
+    </audio>
+    
+    <audio id="incorrectSound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRuYBAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YcIBAAC4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4" type="audio/wav">
+    </audio>
+
+    <script>
+        const gameBoard = document.getElementById('game-board');
+        const messageBox = document.getElementById('message-box');
+        const messageTitle = document.getElementById('message-title');
+        const messageText = document.getElementById('message-text');
+        const messageQuestion = document.getElementById('message-question');
+        const optionsContainer = document.getElementById('options-container');
+        const stageEl = document.getElementById('stage');
+        const scoreEl = document.getElementById('score');
+        const livesEl = document.getElementById('lives');
+        const progressFill = document.getElementById('progress-fill');
+        const achievementEl = document.getElementById('achievement');
+        const achievementText = document.getElementById('achievement-text');
+        
+        // Elementos do chat
+        const chatButton = document.getElementById('chat-button');
+        const chatBox = document.getElementById('chat-box');
+        const chatInput = document.getElementById('chat-input');
+        const chatSend = document.getElementById('chat-send');
+        const chatHistory = document.getElementById('chat-history');
+        const closeChatButton = document.getElementById('close-chat');
+
+        const correctSound = document.getElementById('correctSound');
+        const incorrectSound = document.getElementById('incorrectSound');
+
+        let stage = 1;
+        let score = 0;
+        let lives = 3;
+        let currentLevelStations = [];
+        let currentQuizIndex = 0;
+        let train;
+        let animationFrameId;
+        let totalCorrectAnswers = 0;
+        let consecutiveCorrect = 0;
+        
+        // Estado do jogo para os novos desafios
+        let valveChallengeActive = false;
+        let rhythmChallengeActive = false;
+        let rhythmChallengeTimer;
+        let rhythmTargetSize;
+        
+        const concepts = {
+            1: {
+                title: "Início da Viagem: A Grande Circulação",
+                text: "Bem-vindo ao metrô do coração! 🚇 Nosso primeiro destino é o corpo. Esta é a **Grande Circulação** ou **Circulação Sistêmica**. Aqui, o sangue rico em oxigênio (vermelho) sai do coração para nutrir os tecidos. O sangue pobre em oxigênio (azul) retorna ao coração.",
+                stations: [
+                    { id: 'left-ventricle', name: 'Ventrículo Esquerdo', x: 25, y: 65, color: '#e53e3e' },
+                    { id: 'aorta', name: 'Aorta', x: 35, y: 65, color: '#e53e3e' },
+                    { id: 'tissues', name: 'Tecidos (Corpo)', x: 70, y: 65, color: '#e53e3e' },
+                    { id: 'vena-cava', name: 'Veia Cava', x: 80, y: 50, color: '#4299e1' },
+                    { id: 'right-atrium', name: 'Átrio Direito', x: 70, y: 50, color: '#4299e1' }
+                ],
+                paths: [
+                    { from: 'left-ventricle', to: 'aorta', color: '#e53e3e' },
+                    { from: 'aorta', to: 'tissues', color: '#e53e3e' },
+                    { from: 'tissues', to: 'vena-cava', color: '#4299e1' },
+                    { from: 'vena-cava', to: 'right-atrium', color: '#4299e1' },
+                ],
+                route: ['aorta', 'tissues', 'vena-cava', 'right-atrium'],
+                initialPosition: 'left-ventricle',
+                finalDestination: 'right-atrium',
+                quizzes: [
+                    {
+                        question: "De onde o sangue rico em oxigênio sai para ir para o corpo na Grande Circulação?",
+                        options: [
+                            { text: "Ventrículo Esquerdo", correct: true, explanation: "Perfeito! 🎯 O **Ventrículo Esquerdo** é o compartimento mais forte do coração. Ele bombeia o sangue para todo o corpo, começando pela Aorta." },
+                            { text: "Átrio Direito", correct: false, explanation: "O Átrio Direito recebe sangue que já circulou pelo corpo e está pobre em oxigênio." },
+                            { text: "Pulmões", correct: false, explanation: "Os pulmões são o destino da Circulação Pulmonar, não da Sistêmica." }
+                        ]
+                    },
+                    {
+                        question: "Qual a função da Circulação Sistêmica?",
+                        options: [
+                            { text: "Oxigenar o sangue", correct: false, explanation: "A oxigenação do sangue acontece nos pulmões, na Pequena Circulação." },
+                            { text: "Distribuir oxigênio e nutrientes para o corpo", correct: true, explanation: "Excelente! 🌟 A Grande Circulação é como a rodovia principal que leva o sangue oxigenado para todos os órgãos e tecidos." },
+                            { text: "Coletar resíduos dos pulmões", correct: false, explanation: "Ela coleta resíduos do corpo, não dos pulmões." }
+                        ]
+                    }
+                ]
+            },
+            2: {
+                title: "Próxima Parada: A Pequena Circulação",
+                text: "Hora de oxigenar! 🫁 Esta é a **Pequena Circulação** ou **Circulação Pulmonar**. O sangue pobre em oxigênio (azul) vai do coração para os pulmões para se livrar do gás carbônico e pegar oxigênio. Depois, volta para o coração já oxigenado (vermelho).",
+                stations: [
+                    { id: 'right-ventricle', name: 'Ventrículo Direito', x: 70, y: 35, color: '#4299e1' },
+                    { id: 'pulmonary-artery', name: 'Artéria Pulmonar', x: 60, y: 20, color: '#4299e1' },
+                    { id: 'lungs', name: 'Pulmões', x: 25, y: 20, color: '#4299e1' },
+                    { id: 'pulmonary-vein', name: 'Veia Pulmonar', x: 15, y: 35, color: '#e53e3e' },
+                    { id: 'left-atrium', name: 'Átrio Esquerdo', x: 25, y: 50, color: '#e53e3e' }
+                ],
+                paths: [
+                    { from: 'right-ventricle', to: 'pulmonary-artery', color: '#4299e1' },
+                    { from: 'pulmonary-artery', to: 'lungs', color: '#4299e1' },
+                    { from: 'lungs', to: 'pulmonary-vein', color: '#e53e3e' },
+                    { from: 'pulmonary-vein', to: 'left-atrium', color: '#e53e3e' }
+                ],
+                route: ['pulmonary-artery', 'lungs', 'pulmonary-vein', 'left-atrium'],
+                initialPosition: 'right-ventricle',
+                finalDestination: 'left-atrium',
+                quizzes: [
+                    {
+                        question: "Qual vaso sanguíneo leva o sangue do coração aos pulmões na Pequena Circulação?",
+                        options: [
+                            { text: "Veia Cava", correct: false, explanation: "A Veia Cava leva o sangue do corpo de volta para o coração." },
+                            { text: "Artéria Pulmonar", correct: true, explanation: "Isso mesmo! 💯 A **Artéria Pulmonar** é a única artéria que leva sangue pobre em oxigênio para os pulmões." },
+                            { text: "Aorta", correct: false, explanation: "A Aorta leva sangue oxigenado para o corpo." }
+                        ]
+                    },
+                    {
+                        question: "O que acontece nos pulmões?",
+                        options: [
+                            { text: "O sangue se livra do CO2 e pega O2", correct: true, explanation: "Nos pulmões, ocorre a **hematose**, a troca gasosa que purifica o sangue." },
+                            { text: "O coração bombeia o sangue para o corpo", correct: false, explanation: "O bombeamento para o corpo acontece na Grande Circulação." },
+                            { text: "O sangue libera nutrientes para os tecidos", correct: false, explanation: "Isso acontece nos capilares do corpo, na Grande Circulação." }
+                        ]
+                    }
+                ]
+            },
+            3: {
+                title: "Ciclo Cardíaco: Diástole e Sístole",
+                text: "O coração tem um ciclo de 'relaxar e contrair' a cada batimento. O relaxamento é a **Diástole**, quando o coração se enche de sangue. A contração é a **Sístole**, quando o sangue é bombeado para fora.",
+                stations: [
+                    { id: 'atria-fill', name: 'Átrios se Enchem (Diástole)', x: 40, y: 20, color: '#4299e1' },
+                    { id: 'ventricles-fill', name: 'Ventrículos se Enchem', x: 40, y: 50, color: '#4299e1' },
+                    { id: 'ventricles-contract', name: 'Ventrículos Contraem (Sístole)', x: 60, y: 50, color: '#e53e3e' },
+                    { id: 'blood-ejection', name: 'Sangue Ejetado', x: 60, y: 80, color: '#e53e3e' },
+                    { id: 'relax', name: 'Relaxamento (Diástole)', x: 40, y: 80, color: '#e53e3e' }
+                ],
+                paths: [
+                    { from: 'atria-fill', to: 'ventricles-fill', color: '#4299e1' },
+                    { from: 'ventricles-fill', to: 'ventricles-contract', color: '#4299e1' },
+                    { from: 'ventricles-contract', to: 'blood-ejection', color: '#e53e3e' },
+                    { from: 'blood-ejection', to: 'relax', color: '#e53e3e' },
+                    { from: 'relax', to: 'atria-fill', color: '#4299e1' }
+                ],
+                route: ['ventricles-fill', 'ventricles-contract', 'blood-ejection', 'relax', 'atria-fill'],
+                initialPosition: 'atria-fill',
+                finalDestination: 'atria-fill',
+                quizzes: [
+                    {
+                        question: "Qual a fase do ciclo cardíaco em que o coração se enche de sangue?",
+                        options: [
+                            { text: "Sístole", correct: false, explanation: "A Sístole é a fase de contração." },
+                            { text: "Diástole", correct: true, explanation: "A **Diástole** é a fase de relaxamento e enchimento. Pense que o coração está 'descansando' para a próxima contração." },
+                            { text: "Ejeção", correct: false, explanation: "A Ejeção é a parte da Sístole em que o sangue é bombeado para fora." }
+                        ]
+                    },
+                    {
+                        question: "O que acontece na Sístole?",
+                        options: [
+                            { text: "O coração se enche de sangue", correct: false, explanation: "Isso acontece na Diástole." },
+                            { text: "O sangue é bombeado para fora do coração", correct: true, explanation: "A **Sístole** é a fase de contração. O coração se aperta para ejetar o sangue com força." },
+                            { text: "As válvulas se abrem para o sangue retornar", correct: false, explanation: "As válvulas se fecham para o sangue não retornar." }
+                        ]
+                    }
+                ]
+            },
+            4: {
+                title: "Válvulas: As Portas do Metrô",
+                text: "As **Válvulas Cardíacas** funcionam como portas, garantindo que o sangue siga em uma única direção. Elas evitam que o sangue retorne. Se elas falham, pode haver um 'engarrafamento'!",
+                stations: [
+                    { id: 'left-atrium', name: 'Átrio Esquerdo', x: 20, y: 50, color: '#e53e3e' },
+                    { id: 'mitral-valve', name: 'Válvula Mitral', x: 30, y: 60, color: '#e53e3e', isValve: true, correctValve: true, nextStation: 'left-ventricle' },
+                    { id: 'left-ventricle', name: 'Ventrículo Esquerdo', x: 40, y: 70, color: '#e53e3e' },
+                    { id: 'aortic-valve', name: 'Válvula Aórtica', x: 50, y: 60, color: '#e53e3e', isValve: true, correctValve: true, nextStation: 'aorta' },
+                    { id: 'aorta', name: 'Aorta', x: 60, y: 50, color: '#e53e3e' },
+                    { id: 'right-atrium', name: 'Átrio Direito', x: 80, y: 50, color: '#4299e1' },
+                    { id: 'tricuspid-valve', name: 'Válvula Tricúspide', x: 70, y: 60, color: '#4299e1', isValve: true, correctValve: true, nextStation: 'right-ventricle' },
+                    { id: 'right-ventricle', name: 'Ventrículo Direito', x: 60, y: 70, color: '#4299e1' },
+                    { id: 'pulmonary-valve', name: 'Válvula Pulmonar', x: 50, y: 60, color: '#4299e1', isValve: true, correctValve: true, nextStation: 'pulmonary-artery' },
+                    { id: 'pulmonary-artery', name: 'Artéria Pulmonar', x: 40, y: 50, color: '#4299e1' }
+                ],
+                paths: [
+                    { from: 'left-atrium', to: 'mitral-valve', color: '#e53e3e' },
+                    { from: 'mitral-valve', to: 'left-ventricle', color: '#e53e3e' },
+                    { from: 'left-ventricle', to: 'aortic-valve', color: '#e53e3e' },
+                    { from: 'aortic-valve', to: 'aorta', color: '#e53e3e' },
+                    { from: 'right-atrium', to: 'tricuspid-valve', color: '#4299e1' },
+                    { from: 'tricuspid-valve', to: 'right-ventricle', color: '#4299e1' },
+                    { from: 'right-ventricle', to: 'pulmonary-valve', color: '#4299e1' },
+                    { from: 'pulmonary-valve', to: 'pulmonary-artery', color: '#4299e1' }
+                ],
+                route: ['left-atrium', 'mitral-valve', 'left-ventricle', 'aortic-valve', 'aorta'],
+                initialPosition: 'left-atrium',
+                finalDestination: 'aorta',
+                isChallenge: true,
+                challengeType: 'valve',
+                quizzes: [
+                    {
+                        question: "Qual válvula está localizada entre o átrio esquerdo e o ventrículo esquerdo?",
+                        options: [
+                            { text: "Válvula Mitral", correct: true, explanation: "Exato! A **Válvula Mitral** controla o fluxo entre as duas câmaras do lado esquerdo. Agora, clique na válvula correspondente no mapa para o trem passar!" },
+                            { text: "Válvula Tricúspide", correct: false, explanation: "A Válvula Tricúspide fica no lado direito do coração." },
+                            { text: "Válvula Aórtica", correct: false, explanation: "A Válvula Aórtica fica entre o ventrículo esquerdo e a Aorta." }
+                        ],
+                        correctStationId: 'mitral-valve'
+                    },
+                    {
+                        question: "Agora, qual válvula o sangue passa para sair do ventrículo esquerdo em direção ao corpo?",
+                        options: [
+                            { text: "Válvula Pulmonar", correct: false, explanation: "A Válvula Pulmonar leva o sangue do lado direito aos pulmões." },
+                            { text: "Válvula Tricúspide", correct: false, explanation: "A Válvula Tricúspide fica no lado direito do coração." },
+                            { text: "Válvula Aórtica", correct: true, explanation: "Isso! A **Válvula Aórtica** é a grande porta de saída para o corpo. Clique nela no mapa!" }
+                        ],
+                        correctStationId: 'aortic-valve'
+                    }
+                ]
+            },
+            5: {
+                title: "A Eletricidade do Metrô: O Sistema de Condução",
+                text: "O coração tem sua própria eletricidade para guiar cada batimento. É como um sistema de sinais. O **Nódulo Sinoatrial** é o nosso 'Maquinista Chefe' que envia o primeiro sinal elétrico. O sinal viaja, faz os átrios contraírem, passa pelo **Nódulo Atrioventricular** e desce para os ventrículos para fazê-los contrair.",
+                stations: [
+                    { id: 'sinoatrial-node', name: 'Nódulo Sinoatrial (SA)', x: 70, y: 40, color: '#f6e05e', isConduction: true },
+                    { id: 'atria', name: 'Átrios', x: 70, y: 60, color: '#f6e05e' },
+                    { id: 'atrioventricular-node', name: 'Nódulo Atrioventricular (AV)', x: 50, y: 50, color: '#f6e05e', isConduction: true },
+                    { id: 'his-bundle', name: 'Feixe de His', x: 50, y: 65, color: '#f6e05e', isConduction: true },
+                    { id: 'ventricles', name: 'Ventrículos', x: 30, y: 65, color: '#f6e05e' },
+                    { id: 'purkinje-fibers', name: 'Fibras de Purkinje', x: 20, y: 80, color: '#f6e05e', isConduction: true }
+                ],
+                paths: [
+                    { from: 'sinoatrial-node', to: 'atria', color: '#f6e05e' },
+                    { from: 'atria', to: 'atrioventricular-node', color: '#f6e05e' },
+                    { from: 'atrioventricular-node', to: 'his-bundle', color: '#f6e05e' },
+                    { from: 'his-bundle', to: 'ventricles', color: '#f6e05e' },
+                    { from: 'ventricles', to: 'purkinje-fibers', color: '#f6e05e' }
+                ],
+                route: ['atria', 'atrioventricular-node', 'his-bundle', 'ventricles', 'purkinje-fibers'],
+                initialPosition: 'sinoatrial-node',
+                finalDestination: 'purkinje-fibers',
+                isChallenge: true,
+                challengeType: 'rhythm',
+                quizzes: [
+                    {
+                        question: "Qual estrutura é o 'maquinista chefe' que inicia o sinal elétrico do coração?",
+                        options: [
+                            { text: "Feixe de His", correct: false, explanation: "O Feixe de His ajuda a conduzir o sinal, mas não o inicia." },
+                            { text: "Nódulo Atrioventricular", correct: false, explanation: "O Nódulo Atrioventricular recebe o sinal do Nódulo Sinoatrial e o retransmite." },
+                            { text: "Nódulo Sinoatrial", correct: true, explanation: "O **Nódulo Sinoatrial** é o 'marca-passo' natural do coração. Ele gera os impulsos elétricos que dão o ritmo aos batimentos." }
+                        ]
+                    },
+                    {
+                        question: "As Fibras de Purkinje espalham o sinal elétrico. Sua próxima missão é manter o ritmo do coração. Clique no círculo no momento certo para que o trem avance!"
+                    }
+                ]
+            }
+        };
+
+        function showAchievement(text) {
+            achievementText.textContent = text;
+            achievementEl.classList.add('show');
+            setTimeout(() => {
+                achievementEl.classList.remove('show');
+            }, 3000);
+        }
+
+        function updateProgressBar() {
+            if (!concepts[stage]) return;
+            const totalQuizzes = concepts[stage].quizzes.length;
+            const progress = (currentQuizIndex / totalQuizzes) * 100;
+            progressFill.style.width = `${progress}%`;
+        }
+        
+        function showMessage(title, text, question, options, isFinal = false, onContinue = null) {
+            messageTitle.textContent = title;
+            messageText.textContent = text;
+            messageQuestion.textContent = question;
+            optionsContainer.innerHTML = '';
+
+            const continueButton = document.createElement('button');
+            continueButton.textContent = "Continuar";
+            continueButton.className = "option-button";
+            continueButton.onclick = () => {
+                messageBox.classList.remove('active');
+                if (onContinue) {
+                    onContinue();
+                }
+            };
+            
+            if (isFinal) {
+                const button = document.createElement('button');
+                button.textContent = options[0].text;
+                button.className = "option-button";
+                button.onclick = resetGame;
+                optionsContainer.appendChild(button);
+            } else if (question === "Clique para iniciar a viagem!" || title === "Resposta Correta!") {
+                optionsContainer.appendChild(continueButton);
+            } else {
+                 options.forEach(option => {
+                    const button = document.createElement('button');
+                    button.textContent = option.text;
+                    button.className = "option-button";
+                    button.onclick = () => {
+                        if (option.correct) {
+                            correctSound.play();
+                            score += 10;
+                            totalCorrectAnswers++;
+                            consecutiveCorrect++;
+                            if (consecutiveCorrect === 3) {
+                                showAchievement("Sequência de 3 Respostas Corretas! 🎉");
+                                consecutiveCorrect = 0;
+                            }
+                            updateStats();
+                            showMessage("Resposta Correta!", option.explanation, `Pressione para continuar!`, [{ text: "Continuar", correct: true }], false, () => nextQuizQuestion());
+                        } else {
+                            incorrectSound.play();
+                            lives--;
+                            consecutiveCorrect = 0;
+                            updateStats();
+                            button.classList.add('incorrect');
+                            if (lives <= 0) {
+                                endGame();
+                            } else {
+                                // Reset the quiz for another try
+                                showMessage("Resposta Incorreta!", "Ops, tente novamente. Perdeu uma vida!", question, options);
+                            }
+                        }
+                    };
+                    optionsContainer.appendChild(button);
+                });
+            }
+            messageBox.classList.add('active');
+        }
+        
+        function createGameStage(stageData) {
+            gameBoard.innerHTML = '';
+            currentLevelStations = stageData.stations;
+
+            stageData.paths.forEach(path => {
+                const from = stageData.stations.find(s => s.id === path.from);
+                const to = stageData.stations.find(s => s.id === path.to);
+                if (from && to) {
+                    const line = document.createElement('div');
+                    const distance = Math.hypot((to.x - from.x) * gameBoard.clientWidth / 100, (to.y - from.y) * gameBoard.clientHeight / 100);
+                    const angle = Math.atan2((to.y - from.y) * gameBoard.clientHeight, (to.x - from.x) * gameBoard.clientWidth) * 180 / Math.PI;
+
+                    line.className = 'path';
+                    line.style.width = `${distance}px`;
+                    line.style.top = `${from.y}%`;
+                    line.style.left = `${from.x}%`;
+                    line.style.transformOrigin = '0 0';
+                    line.style.transform = `rotate(${angle}deg)`;
+                    line.style.backgroundColor = path.color;
+                    gameBoard.appendChild(line);
+                }
+            });
+
+            currentLevelStations.forEach(station => {
+                const stationDiv = document.createElement('div');
+                stationDiv.className = `station station-${station.id}`;
+                stationDiv.style.left = `${station.x}%`;
+                stationDiv.style.top = `${station.y}%`;
+                stationDiv.style.backgroundColor = station.color;
+                stationDiv.dataset.id = station.id;
+                
+                const label = document.createElement('div');
+                label.className = 'station-label';
+                label.textContent = station.name;
+                label.style.transform = `translate(-50%, ${station.y > 50 ? '120%' : '-150%'})`;
+                stationDiv.appendChild(label);
+                
+                gameBoard.appendChild(stationDiv);
+            });
+
+            train = document.createElement('div');
+            train.className = 'train';
+            gameBoard.appendChild(train);
+        }
+        
+        function runTrainAnimation() {
+            const stageData = concepts[stage];
+            const route = stageData.route;
+            let currentStationIndex = 0;
+            let currentStation = stageData.stations.find(s => s.id === stageData.initialPosition);
+        
+            train.style.left = `${currentStation.x}%`;
+            train.style.top = `${currentStation.y}%`;
+            train.style.backgroundColor = currentStation.color;
+            
+            const animateStep = () => {
+                if (currentStationIndex >= route.length) {
+                    if (stageData.isChallenge) {
+                        if (stageData.challengeType === 'valve') {
+                            startValveChallenge();
+                        } else if (stageData.challengeType === 'rhythm') {
+                            startRhythmChallenge();
+                        }
+                    } else {
+                        showQuestion();
+                    }
+                    return;
+                }
+        
+                const nextStation = stageData.stations.find(s => s.id === route[currentStationIndex]);
+                const nextStationEl = document.querySelector(`.station-${nextStation.id}`);
+                const pathEl = document.querySelector(`.path[style*="top: ${currentStation.y}%;"][style*="left: ${currentStation.x}%;"]`);
+        
+                const trainPath = [{x: currentStation.x, y: currentStation.y}, {x: nextStation.x, y: nextStation.y}];
+                let progress = 0;
+                const totalDuration = 2000;
+                const startTime = performance.now();
+        
+                const moveTrain = (timestamp) => {
+                    progress = (timestamp - startTime) / totalDuration;
+                    if (progress >= 1) {
+                        progress = 1;
+                    }
+        
+                    const newX = trainPath[0].x + (trainPath[1].x - trainPath[0].x) * progress;
+                    const newY = trainPath[0].y + (trainPath[1].y - trainPath[0].y) * progress;
+                    
+                    train.style.left = `${newX}%`;
+                    train.style.top = `${newY}%`;
+        
+                    if (pathEl) {
+                        pathEl.classList.add('active');
+                    }
+        
+                    if (progress < 1) {
+                        animationFrameId = requestAnimationFrame(moveTrain);
+                    } else {
+                        if (pathEl) {
+                            pathEl.classList.remove('active');
+                        }
+                        currentStation = nextStation;
+                        currentStationIndex++;
+                        if (nextStationEl) {
+                            nextStationEl.classList.add('pulse-animation');
+                            setTimeout(() => nextStationEl.classList.remove('pulse-animation'), 1000);
+                        }
+                        requestAnimationFrame(animateStep);
+                    }
+                };
+                animationFrameId = requestAnimationFrame(moveTrain);
+            };
+        
+            requestAnimationFrame(animateStep);
+        }
+        
+        function startValveChallenge() {
+            valveChallengeActive = true;
+            const quiz = concepts[stage].quizzes[currentQuizIndex];
+            showMessage("Desafio de Válvula!", quiz.explanation, quiz.question, quiz.options);
+            
+            // Adicionar evento de clique às estações
+            const valveStations = document.querySelectorAll('.station');
+            valveStations.forEach(station => {
+                station.addEventListener('click', handleValveClick);
+            });
+        }
+        
+        function handleValveClick(event) {
+            if (!valveChallengeActive) return;
+            const clickedStationId = event.currentTarget.dataset.id;
+            const quiz = concepts[stage].quizzes[currentQuizIndex];
+            const correctStation = concepts[stage].stations.find(s => s.id === quiz.correctStationId);
+        
+            if (clickedStationId === quiz.correctStationId) {
+                correctSound.play();
+                score += 20; // Pontuação extra para desafios
+                updateStats();
+                valveChallengeActive = false;
+                const valveStations = document.querySelectorAll('.station');
+                valveStations.forEach(station => {
+                    station.removeEventListener('click', handleValveClick);
+                });
+                showMessage("Sucesso!", `Você abriu a ${correctStation.name} e o trem pode seguir!`, "Pressione para continuar!", [{ text: "Continuar", correct: true }], false, () => continueValveChallenge());
+            } else {
+                incorrectSound.play();
+                lives--;
+                updateStats();
+                if (lives <= 0) {
+                    endGame();
+                } else {
+                    showMessage("Resposta Incorreta!", "Essa não é a válvula certa. Tente novamente!", quiz.question, quiz.options);
+                }
+            }
+        }
+        
+        function continueValveChallenge() {
+            nextQuizQuestion();
+            if (currentQuizIndex < concepts[stage].quizzes.length) {
+                runTrainAnimation();
+            }
+        }
+        
+        function startRhythmChallenge() {
+            rhythmChallengeActive = true;
+            const quiz = concepts[stage].quizzes[currentQuizIndex];
+            showMessage("Desafio de Ritmo!", quiz.question, `Mantenha o ritmo! O coração bate...`, [{ text: "Continuar", correct: true }], false, () => runRhythmAnimation());
+        }
+        
+        function runRhythmAnimation() {
+            const rhythmCircle = document.createElement('div');
+            rhythmCircle.style.position = 'absolute';
+            rhythmCircle.style.width = '20px';
+            rhythmCircle.style.height = '20px';
+            rhythmCircle.style.borderRadius = '50%';
+            rhythmCircle.style.backgroundColor = '#ff007f';
+            rhythmCircle.style.top = '50%';
+            rhythmCircle.style.left = '50%';
+            rhythmCircle.style.transform = 'translate(-50%, -50%)';
+            rhythmCircle.style.transition = 'transform 0.5s ease-out';
+            rhythmCircle.style.cursor = 'pointer';
+            gameBoard.appendChild(rhythmCircle);
+
+            let beatNumber = 0;
+            const totalBeats = 3;
+            
+            rhythmCircle.addEventListener('click', () => {
+                const rect = rhythmCircle.getBoundingClientRect();
+                const currentSize = rect.width;
+                const targetMin = 40;
+                const targetMax = 60;
+        
+                if (currentSize >= targetMin && currentSize <= targetMax) {
+                    correctSound.play();
+                    score += 30; // Pontuação extra para o desafio de ritmo
+                    updateStats();
+                    rhythmCircle.style.backgroundColor = '#39ff14';
+                    beatNumber++;
+                    if (beatNumber >= totalBeats) {
+                        rhythmChallengeActive = false;
+                        rhythmCircle.remove();
+                        showMessage("Ritmo Perfeito!", "Você manteve o ritmo! O coração está sincronizado.", "Pressione para continuar!", [{ text: "Continuar", correct: true }], false, () => nextQuizQuestion());
+                    } else {
+                        setTimeout(() => {
+                            rhythmCircle.style.backgroundColor = '#ff007f';
+                        }, 500);
+                        rhythmCircle.style.transform = 'translate(-50%, -50%) scale(1)';
+                        setTimeout(() => {
+                            rhythmCircle.style.transform = 'translate(-50%, -50%) scale(3)';
+                        }, 50); // reset scale
+                    }
+                } else {
+                    incorrectSound.play();
+                    lives--;
+                    updateStats();
+                    rhythmCircle.style.backgroundColor = '#e53e3e';
+                    if (lives <= 0) {
+                        endGame();
+                    } else {
+                        showMessage("Ritmo Perdido!", "Fora do tempo. Tente novamente!", `Mantenha o ritmo! ${beatNumber}/${totalBeats} batidas corretas.`, [{ text: "Tentar de Novo", correct: true }], false, () => runRhythmAnimation());
+                    }
+                }
+            });
+        
+            rhythmCircle.style.transform = 'translate(-50%, -50%) scale(3)';
+            
+            // Animação inicial
+            setTimeout(() => {
+                rhythmCircle.style.transform = 'translate(-50%, -50%) scale(1)';
+            }, 1000);
+        
+            rhythmChallengeTimer = setInterval(() => {
+                rhythmCircle.style.transform = 'translate(-50%, -50%) scale(3)';
+                setTimeout(() => {
+                    rhythmCircle.style.transform = 'translate(-50%, -50%) scale(1)';
+                }, 50);
+            }, 1000); // Ritmo a cada segundo
+        
+            setTimeout(() => {
+                if (rhythmChallengeActive) {
+                    clearInterval(rhythmChallengeTimer);
+                    rhythmCircle.remove();
+                    lives--;
+                    updateStats();
+                    if (lives <= 0) {
+                        endGame();
+                    } else {
+                        showMessage("Tempo Esgotado!", "Você não completou o desafio a tempo. Tente novamente.", `Mantenha o ritmo!`, [{ text: "Tentar de Novo", correct: true }], false, () => runRhythmAnimation());
+                    }
+                }
+            }, 15000); // 15 segundos para completar o desafio
+        }
+        
+        function showQuestion() {
+            messageBox.classList.remove('active');
+            const stageData = concepts[stage];
+            const quiz = stageData.quizzes[currentQuizIndex];
+            showMessage(stageData.title, stageData.text, quiz.question, quiz.options);
+            updateProgressBar();
+        }
+
+        function nextQuizQuestion() {
+            currentQuizIndex++;
+            if (currentQuizIndex < concepts[stage].quizzes.length) {
+                if (concepts[stage].isChallenge) {
+                     if (concepts[stage].challengeType === 'valve') {
+                        startValveChallenge();
+                    } else if (concepts[stage].challengeType === 'rhythm') {
+                        startRhythmChallenge();
+                    }
+                } else {
+                    runTrainAnimation();
+                }
+            } else {
+                nextStage();
+            }
+        }
+        
+        function updateStats() {
+            stageEl.textContent = stage;
+            scoreEl.textContent = score;
+            livesEl.textContent = lives;
+        }
+
+        function resetGame() {
+            stage = 1;
+            score = 0;
+            lives = 3;
+            currentQuizIndex = 0;
+            updateStats();
+            startStage();
+        }
+
+        function nextStage() {
+            messageBox.classList.remove('active');
+            stage++;
+            currentQuizIndex = 0;
+            updateStats();
+            if (concepts[stage]) {
+                startStage();
+            } else {
+                showMessage("Fim de Jogo!", `Você completou todas as fases com ${score} pontos!`, "O que você achou do jogo?", [{ text: "Começar de novo!", correct: true }], true);
+            }
+        }
+        
+        function startStage() {
+            const stageData = concepts[stage];
+            if (!stageData) {
+                return;
+            }
+            createGameStage(stageData);
+            showMessage(stageData.title, stageData.text, "Clique para iniciar a viagem!", [{ text: "Iniciar", correct: true }], false, () => {
+                if(stageData.isChallenge && stageData.challengeType === 'valve') {
+                    startValveChallenge();
+                } else if(stageData.isChallenge && stageData.challengeType === 'rhythm') {
+                    showQuestion();
+                } else {
+                    runTrainAnimation();
+                }
+            });
+        }
+
+        function endGame() {
+            showMessage("Fim de Jogo!", `Suas vidas acabaram. Você marcou ${score} pontos.`, "Gostaria de tentar novamente?", [{ text: "Reiniciar o jogo", correct: true }], true);
+        }
+
+        // Event Listeners para o chat
+        chatButton.addEventListener('click', () => {
+            chatBox.classList.toggle('hidden');
+        });
+
+        closeChatButton.addEventListener('click', () => {
+            chatBox.classList.add('hidden');
+        });
+
+        chatSend.addEventListener('click', sendGeminiQuery);
+        chatInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                sendGeminiQuery();
+            }
+        });
+
+        async function sendGeminiQuery() {
+            const userQuery = chatInput.value.trim();
+            if (!userQuery) return;
+            
+            // Adiciona a pergunta do usuário ao histórico do chat
+            const userMessage = document.createElement('p');
+            userMessage.className = 'text-sm text-right bg-blue-100 p-2 rounded-lg my-1';
+            userMessage.textContent = userQuery;
+            chatHistory.appendChild(userMessage);
+            chatInput.value = '';
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+
+            // Adiciona um placeholder de resposta
+            const loadingMessage = document.createElement('p');
+            loadingMessage.className = 'text-sm text-gray-500 my-1';
+            loadingMessage.textContent = 'A pensar...';
+            chatHistory.appendChild(loadingMessage);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+            
+            const systemPrompt = "Você é o Dr. Célula, um tutor amigável e simpático especializado em fisiologia e anatomia do sistema cardiovascular. Sua missão é explicar conceitos complexos de forma simples e divertida, usando analogias e linguagem fácil de entender para quem está a começar a aprender. Limite as suas respostas a no máximo 2-3 frases, a menos que seja solicitado um resumo. Mantenha um tom encorajador e positivo.";
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                tools: [{ "google_search": {} }],
+                systemInstruction: {
+                    parts: [{ text: systemPrompt }]
+                }
+            };
+
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            loadingMessage.remove(); // Remove o "A pensar..."
+
+            const result = await response.json();
+            const candidate = result.candidates?.[0];
+
+            let aiResponseText = 'Não consegui encontrar uma resposta para isso. Tente de novo, por favor!';
+            let sources = [];
+            
+            if (candidate && candidate.content?.parts?.[0]?.text) {
+                aiResponseText = candidate.content.parts[0].text;
+                
+                const groundingMetadata = candidate.groundingMetadata;
+                if (groundingMetadata && groundingMetadata.groundingAttributions) {
+                    sources = groundingMetadata.groundingAttributions
+                        .map(attribution => ({
+                            uri: attribution.web?.uri,
+                            title: attribution.web?.title,
+                        }))
+                        .filter(source => source.uri && source.title);
+                }
+            }
+
+            const aiMessage = document.createElement('p');
+            aiMessage.className = 'text-sm text-left bg-gray-100 p-2 rounded-lg my-1';
+            aiMessage.textContent = aiResponseText;
+            chatHistory.appendChild(aiMessage);
+
+            if (sources.length > 0) {
+                const sourcesDiv = document.createElement('div');
+                sourcesDiv.className = 'text-xs text-gray-500 mt-2';
+                sourcesDiv.textContent = 'Fontes: ';
+                sources.forEach((source, index) => {
+                    const link = document.createElement('a');
+                    link.href = source.uri;
+                    link.target = '_blank';
+                    link.className = 'text-blue-500 hover:underline';
+                    link.textContent = source.title;
+                    sourcesDiv.appendChild(link);
+                    if (index < sources.length - 1) {
+                        sourcesDiv.appendChild(document.createTextNode(', '));
+                    }
+                });
+                chatHistory.appendChild(sourcesDiv);
+            }
+
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+
+        window.onload = () => {
+            startStage();
+        };
+
+    </script>
+</body>
+</html>
